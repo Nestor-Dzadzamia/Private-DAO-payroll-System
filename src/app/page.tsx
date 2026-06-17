@@ -24,7 +24,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 py-4">
+        <div className="grid grid-cols-3 gap-3 py-4">
           {[
             {
               icon: (
@@ -57,7 +57,7 @@ export default function Home() {
               key={f.label}
               className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 space-y-2"
             >
-              <div className="w-9 h-9 rounded-lg bg-violet-900/40 border border-violet-800/40 flex items-center justify-center text-violet-400">
+              <div className="ml-10 w-9 h-9 rounded-lg bg-violet-900/40 border border-violet-800/40 flex items-center justify-center text-violet-400">
                 {f.icon}
               </div>
               <div className="text-xs font-semibold text-slate-300">
