@@ -5,7 +5,7 @@ import { useHinkal } from "@/context/HinkalContext";
 import toast from "react-hot-toast";
 
 export function useWithdraw() {
-  const { hinkal, dataLoaded, refreshBalances } = useHinkal();
+  const { hinkal, chainId, dataLoaded, refreshBalances } = useHinkal();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const withdraw = useCallback(
@@ -24,15 +24,11 @@ export function useWithdraw() {
           [token],
           [-amountInWei],
           recipientAddress,
-          false,
-          undefined,
-          undefined,
-          undefined,
           false
         );
 
         if (tx && typeof tx === "object" && "hash" in tx) {
-          await hinkal.waitForTransaction(tx.hash as string);
+          await hinkal.waitForTransaction(chainId!, tx.hash as string);
         }
 
         toast.success("Withdrawal complete!", { id: "withdraw" });
@@ -45,7 +41,7 @@ export function useWithdraw() {
         setIsProcessing(false);
       }
     },
-    [hinkal, dataLoaded, refreshBalances]
+    [hinkal, chainId, dataLoaded, refreshBalances]
   );
 
   return { withdraw, isProcessing };

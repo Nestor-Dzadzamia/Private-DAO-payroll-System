@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useState } from "react";
-import { useConfig, useConnectors } from "wagmi";
+import { useConfig, useConnectors, useChainId } from "wagmi";
 import type { Connector } from "wagmi";
 import { prepareWagmiHinkal } from "@hinkal/common/providers/prepareWagmiHinkal";
 import { useHinkal } from "@/context/HinkalContext";
@@ -9,6 +9,7 @@ import { Button } from "./ui/Button";
 export function ConnectWallet() {
   const connectors = useConnectors();
   const config = useConfig();
+  const currentChainId = useChainId();
   const { setHinkal, setChainId, setDataLoaded, setShieldedAddress } =
     useHinkal();
   const [connectingId, setConnectingId] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function ConnectWallet() {
         const hinkal = await prepareWagmiHinkal(connector, config);
         setHinkal(hinkal);
         setShieldedAddress(hinkal.userKeys.getShieldedPublicKey());
-        setChainId(hinkal.getCurrentChainId());
+        setChainId(currentChainId);
         setDataLoaded(true);
       } catch (err) {
         console.error(err);
@@ -38,7 +39,7 @@ export function ConnectWallet() {
         setConnectingId(null);
       }
     },
-    [config, setHinkal, setShieldedAddress, setChainId, setDataLoaded]
+    [config, currentChainId, setHinkal, setShieldedAddress, setChainId, setDataLoaded]
   );
 
   return (

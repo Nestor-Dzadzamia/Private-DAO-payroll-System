@@ -6,7 +6,7 @@ import { PayrollEntry, PayrollStatus, TransferResult } from "@/types/payroll";
 import toast from "react-hot-toast";
 
 export function usePayroll() {
-  const { hinkal, dataLoaded, refreshBalances } = useHinkal();
+  const { hinkal, chainId, dataLoaded, refreshBalances } = useHinkal();
   const [status, setStatus] = useState<PayrollStatus>("idle");
   const [results, setResults] = useState<TransferResult[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
@@ -33,7 +33,7 @@ export function usePayroll() {
 
         const depositTx = await hinkal.deposit([token], [totalAmount]);
         if (depositTx && typeof depositTx === "object" && "hash" in depositTx) {
-          await hinkal.waitForTransaction(depositTx.hash as string);
+          await hinkal.waitForTransaction(chainId!, depositTx.hash as string);
         }
 
         toast.success("Funds deposited into shielded pool", { id: "deposit" });
@@ -80,7 +80,7 @@ export function usePayroll() {
         toast.error(msg, { id: "deposit" });
       }
     },
-    [hinkal, dataLoaded, refreshBalances]
+    [hinkal, chainId, dataLoaded, refreshBalances]
   );
 
   const reset = useCallback(() => {

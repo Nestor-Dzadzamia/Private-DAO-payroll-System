@@ -36,7 +36,7 @@ type HinkalContextType = {
   refreshBalances: () => Promise<void>;
 };
 
-const hinkalInstance = new Hinkal<Connector>();
+const hinkalInstance = typeof window !== "undefined" ? new Hinkal<Connector>() : (null as unknown as Hinkal<Connector>);
 
 const HinkalContext = createContext<HinkalContextType>({
   hinkal: hinkalInstance,
@@ -76,7 +76,7 @@ export const HinkalProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       const ethAddress = await hinkal.getEthereumAddress();
       const bals = await hinkal.getBalances(
-        hinkal.getCurrentChainId(),
+        chainId!,
         hinkal.userKeys.getShieldedPrivateKey(),
         hinkal.userKeys.getShieldedPublicKey(),
         ethAddress,
@@ -87,7 +87,7 @@ export const HinkalProvider: FC<{ children: ReactNode }> = ({ children }) => {
     } catch (err) {
       console.error("Balance refresh error:", err);
     }
-  }, [dataLoaded, hinkal]);
+  }, [dataLoaded, hinkal, chainId]);
 
   useEffect(() => {
     if (!dataLoaded) return;
