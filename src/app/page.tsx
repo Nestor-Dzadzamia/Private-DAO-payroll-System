@@ -26,15 +26,40 @@ export default function Home() {
 
         <div className="grid grid-cols-3 gap-4 py-4">
           {[
-            { icon: "🔒", label: "ZK Privacy", desc: "No one sees who got paid" },
-            { icon: "⚡", label: "One Click", desc: "CSV → done" },
-            { icon: "✅", label: "Compliant", desc: "Viewing keys for audits" },
+            {
+              icon: (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              ),
+              label: "ZK Privacy", desc: "No one sees who got paid"
+            },
+            {
+              icon: (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              ),
+              label: "One Click", desc: "CSV → done"
+            },
+            {
+              icon: (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <polyline points="9 12 11 14 15 10"/>
+                </svg>
+              ),
+              label: "Compliant", desc: "Viewing keys for audits"
+            },
           ].map((f) => (
             <div
               key={f.label}
-              className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 space-y-1"
+              className="bg-slate-900/50 border border-slate-800 rounded-xl p-3 space-y-2"
             >
-              <div className="text-2xl">{f.icon}</div>
+              <div className="w-9 h-9 rounded-lg bg-violet-900/40 border border-violet-800/40 flex items-center justify-center text-violet-400">
+                {f.icon}
+              </div>
               <div className="text-xs font-semibold text-slate-300">
                 {f.label}
               </div>
