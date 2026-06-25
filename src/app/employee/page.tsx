@@ -123,12 +123,22 @@ export default function EmployeePage() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 font-mono"
               />
 
-              <div className="bg-slate-800/50 rounded-xl p-3 space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Amount</span>
-                  <span className="text-slate-200 font-medium">
-                    {selectedAmount} {selectedToken.symbol}
-                  </span>
+              <div className="bg-slate-800/50 rounded-xl p-3 space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-slate-400 shrink-0">Amount</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={selectedAmount}
+                      onChange={(e) => setSelectedAmount(e.target.value)}
+                      className="w-28 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-right text-slate-200 font-medium focus:outline-none focus:border-violet-500"
+                    />
+                    <span className="text-slate-400">
+                      {selectedToken.symbol}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Privacy</span>
@@ -143,7 +153,10 @@ export default function EmployeePage() {
                 loading={isProcessing}
                 disabled={
                   !recipientAddress ||
-                  !/^0x[0-9a-fA-F]{40}$/.test(recipientAddress)
+                  !/^0x[0-9a-fA-F]{40}$/.test(recipientAddress) ||
+                  !selectedAmount ||
+                  isNaN(parseFloat(selectedAmount)) ||
+                  parseFloat(selectedAmount) <= 0
                 }
                 onClick={() =>
                   withdraw(selectedToken, selectedAmount, recipientAddress)
