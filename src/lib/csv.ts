@@ -24,6 +24,7 @@ export function parseCSV(text: string): PayrollEntry[] {
 
 export function generateSampleCSV(): string {
   return `# name, wallet_address, amount_usdc
-Employee1,0x6159D30C697dA707c83be456c114366EE2681A92,0.5
-Employee2,0x87Ab970115c4eD2b76B828927c26cd7c14b8C3f7,0.5`;
+Alice,0x70997970C51812dc3A010C7d01b50e0d17dc79C8,1500
+Bob,0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC,2200
+Carol,0x90F79bf6EB2c4f870365E785982E1f101E93b906,800`;
 }
