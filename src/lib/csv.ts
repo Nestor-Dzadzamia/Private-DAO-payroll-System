@@ -1,25 +1,41 @@
 import { PayrollEntry } from "@/types/payroll";
 
-export function parseCSV(text: string): PayrollEntry[] {
+export type SkippedRow = { line: string; reason: string };
+export type ParseCSVResult = { entries: PayrollEntry[]; skipped: SkippedRow[] };
+
+export function parseCSV(text: string): ParseCSVResult {
   const lines = text.trim().split("\n");
   const entries: PayrollEntry[] = [];
+  const skipped: SkippedRow[] = [];
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
 
     const parts = trimmed.split(",").map((p) => p.trim());
-    if (parts.length < 3) continue;
+    if (parts.length < 3) {
+      skipped.push({ line: trimmed, reason: "Expected 3 columns: name, address, amount" });
+      continue;
+    }
 
     const [name, address, amount] = parts;
-    if (!name || !address || !amount) continue;
-    if (!/^0x[0-9a-fA-F]{40}$/.test(address)) continue;
-    if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) continue;
+    if (!name || !address || !amount) {
+      skipped.push({ line: trimmed, reason: "Missing name, address, or amount" });
+      continue;
+    }
+    if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+      skipped.push({ line: trimmed, reason: `Invalid wallet address: ${address}` });
+      continue;
+    }
+    if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      skipped.push({ line: trimmed, reason: `Invalid amount: ${amount}` });
+      continue;
+    }
 
     entries.push({ name, address, amount });
   }
 
-  return entries;
+  return { entries, skipped };
 }
 
 export function generateSampleCSV(): string {

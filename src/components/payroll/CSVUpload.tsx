@@ -15,15 +15,25 @@ export function CSVUpload({ onEntries }: Props) {
 
   const process = useCallback(
     (text: string) => {
-      const entries = parseCSV(text);
+      const { entries, skipped } = parseCSV(text);
+
       if (entries.length === 0) {
         toast.error(
           "No valid entries found. Format: name, 0x_address, amount"
         );
         return;
       }
+
       onEntries(entries);
       toast.success(`Loaded ${entries.length} employees`);
+
+      if (skipped.length > 0) {
+        toast.error(
+          `Skipped ${skipped.length} row(s):\n` +
+            skipped.map((s) => `"${s.line}" — ${s.reason}`).join("\n"),
+          { duration: 8000 }
+        );
+      }
     },
     [onEntries]
   );
