@@ -32,8 +32,14 @@ export function usePayroll() {
         });
 
         const depositTx = await hinkal.deposit([token], [totalAmount]);
-        if (depositTx && typeof depositTx === "object" && "hash" in depositTx) {
-          await hinkal.waitForTransaction(chainId!, depositTx.hash as string);
+        const depositTxHash =
+          typeof depositTx === "string"
+            ? depositTx
+            : depositTx && typeof depositTx === "object" && "hash" in depositTx
+              ? (depositTx.hash as string)
+              : undefined;
+        if (depositTxHash) {
+          await hinkal.waitForTransaction(chainId!, depositTxHash);
         }
 
         toast.success("Funds deposited into shielded pool", { id: "deposit" });

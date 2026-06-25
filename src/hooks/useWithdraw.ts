@@ -27,8 +27,14 @@ export function useWithdraw() {
           false
         );
 
-        if (tx && typeof tx === "object" && "hash" in tx) {
-          await hinkal.waitForTransaction(chainId!, tx.hash as string);
+        const txHash =
+          typeof tx === "string"
+            ? tx
+            : tx && typeof tx === "object" && "hash" in tx
+              ? (tx.hash as string)
+              : undefined;
+        if (txHash) {
+          await hinkal.waitForTransaction(chainId!, txHash);
         }
 
         toast.success("Withdrawal complete!", { id: "withdraw" });
