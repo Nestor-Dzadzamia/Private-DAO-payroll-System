@@ -24,7 +24,7 @@ export function useWithdraw() {
           [token],
           [-amountInWei],
           recipientAddress,
-          false
+          true
         );
 
         const txHash =
