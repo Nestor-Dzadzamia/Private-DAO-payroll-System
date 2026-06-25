@@ -197,8 +197,7 @@ export default function TreasurerPage() {
                 loading={isRunning}
                 disabled={!canRun}
                 onClick={() => {
-                  if (selectedToken && totalAmount)
-                    runPayroll(entries, selectedToken, totalAmount);
+                  if (selectedToken && totalAmount) runPayroll(entries, selectedToken);
                 }}
               >
                 {isRunning

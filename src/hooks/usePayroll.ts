@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useState } from "react";
-import { hinkalTransfer, getAmountInWei, ERC20Token } from "@hinkal/common";
+import { getAmountInWei, ERC20Token } from "@hinkal/common";
 import { useHinkal } from "@/context/HinkalContext";
 import { PayrollEntry, PayrollStatus, TransferResult } from "@/types/payroll";
 import toast from "react-hot-toast";
@@ -12,7 +12,7 @@ export function usePayroll() {
   const [currentIndex, setCurrentIndex] = useState(-1);
 
   const runPayroll = useCallback(
-    async (entries: PayrollEntry[], token: ERC20Token, totalAmount: bigint) => {
+    async (entries: PayrollEntry[], token: ERC20Token) => {
       if (!dataLoaded || !hinkal) {
         toast.error("Wallet not connected");
         return;
@@ -27,62 +27,43 @@ export function usePayroll() {
       setCurrentIndex(-1);
 
       try {
-        toast.loading("Depositing funds into Hinkal shielded pool...", {
+        toast.loading("Depositing and paying contributors privately via Hinkal…", {
           id: "deposit",
         });
 
-        const depositTx = await hinkal.deposit([token], [totalAmount]);
-        const depositTxHash =
-          typeof depositTx === "string"
-            ? depositTx
-            : depositTx && typeof depositTx === "object" && "hash" in depositTx
-              ? (depositTx.hash as string)
-              : undefined;
-        if (depositTxHash) {
-          await hinkal.waitForTransaction(chainId!, depositTxHash);
+        const recipientAmounts = entries.map((entry) =>
+          getAmountInWei(token, entry.amount)
+        );
+        const recipientAddresses = entries.map((entry) => entry.address);
+
+        const tx = await hinkal.depositAndWithdraw(
+          token,
+          recipientAmounts,
+          recipientAddresses
+        );
+
+        const txHash = typeof tx === "string" ? tx : undefined;
+        if (txHash) {
+          await hinkal.waitForTransaction(chainId!, txHash);
         }
 
-        toast.success("Funds deposited into shielded pool", { id: "deposit" });
         setStatus("transferring");
-
-        for (let i = 0; i < entries.length; i++) {
-          setCurrentIndex(i);
-          setResults((prev) =>
-            prev.map((r, idx) =>
-              idx === i ? { ...r, status: "pending" } : r
-            )
-          );
-
-          const entry = entries[i];
-          try {
-            const amountInWei = getAmountInWei(token, entry.amount);
-            await hinkalTransfer(hinkal, [token], [-amountInWei], entry.address);
-
-            setResults((prev) =>
-              prev.map((r, idx) =>
-                idx === i ? { ...r, status: "success" } : r
-              )
-            );
-            toast.success(`Sent ${entry.amount} to ${entry.name}`);
-          } catch (err) {
-            const msg =
-              err instanceof Error ? err.message : "Transfer failed";
-            setResults((prev) =>
-              prev.map((r, idx) =>
-                idx === i ? { ...r, status: "error", error: msg } : r
-              )
-            );
-            toast.error(`Failed to pay ${entry.name}: ${msg}`);
-          }
-        }
+        setResults((prev) =>
+          prev.map((r) => ({ ...r, status: "success", txHash }))
+        );
 
         setStatus("done");
         setCurrentIndex(-1);
         await refreshBalances();
-        toast.success("Payroll complete!");
+        toast.success("Payroll complete! Paid privately via Hinkal.", {
+          id: "deposit",
+        });
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Payroll failed";
         setStatus("error");
+        setResults((prev) =>
+          prev.map((r) => ({ ...r, status: "error", error: msg }))
+        );
         toast.error(msg, { id: "deposit" });
       }
     },
