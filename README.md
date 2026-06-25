@@ -1,45 +1,43 @@
 # Private DAO Payroll
 
-> Pay your DAO contributors privately on-chain. Competitors see nothing. Contributors get paid.
+> Pay your DAO contributors on-chain without exposing the link between your treasury and each contributor.
 
-Built on [Hinkal Protocol](https://hinkal.pro) a ZK shielded pool for EVM chains.
+Built on [Hinkal Protocol](https://hinkal.io), a ZK shielded pool for EVM chains.
 
 ## The Problem
 
-Every on-chain payroll transaction is publicly visible on Etherscan. Anyone can see who your contributors are, how much they earn, and your organization's burn rate. This exposes sensitive data to competitors, attackers, and even your own team members.
+Every on-chain payroll transaction is publicly visible. Anyone can see your treasury address, your contributors' addresses, and exactly how much each one was paid. This exposes sensitive compensation data to competitors, attackers, and the public.
 
 ## The Solution
 
 Route payroll through Hinkal's ZK shielded pool:
 
 ```
-DAO Treasury → Hinkal Pool (ZK proof) → Employee's shielded address
-                     ↑
-        Observers see one lump-sum deposit.
-        No one sees individual salaries.
+DAO Treasury --(deposit + ZK proof)--> Hinkal Pool --(separate tx)--> Employee's address
 ```
+
+The treasurer's deposit and each employee's payout are **separate on-chain transactions** with no shared transaction hash or direct transfer between them. An outside observer sees "Treasury paid the Hinkal pool" and, separately, "Employee received funds from the Hinkal pool" — but cannot cryptographically prove these are linked.
+
+**What this does NOT hide:** individual payout amounts and employee addresses are visible on-chain (this is a direct-settlement design, not a fully shielded one — see Privacy Model below). What it hides is the on-chain link between a specific treasury and a specific employee's payment.
 
 ## Features
 
-- **Upload CSV** : `name, 0x_address, amount` and you're ready
-- **One-click payroll** : deposit + batch private transfers in sequence
-- **Employee claim page** : withdraw to any fresh wallet, no link to employer
-- **ZK proofs generated locally** : Hinkal's SDK handles Groth16 snarkjs under the hood
-- **Compliance-ready** : viewing keys allow selective disclosure for audits
+- **Upload CSV**: `name, 0x_address, amount` and you're ready
+- **One-click payroll**: deposit and pay every contributor in a single transaction via Hinkal's `depositAndWithdraw`
+- **Claim page**: a general-purpose tool to withdraw any Hinkal shielded balance to any address, with a ZK proof proving ownership
+- **Compliance-ready**: Hinkal supports viewing keys for selective disclosure to auditors
 
 ## Stack
 
 - Next.js 16 + TypeScript + Tailwind CSS
-- [@hinkal/common](https://www.npmjs.com/package/@hinkal/common) : ZK shielded pool SDK
-- wagmi v2 + viem : wallet connection
-- React Hot Toast : transaction notifications
+- [@hinkal/common](https://www.npmjs.com/package/@hinkal/common) — ZK shielded pool SDK
+- wagmi v2 + viem — wallet connection
+- React Hot Toast — transaction notifications
 
 ## Getting Started
 
 ```bash
 npm install
-cp .env.local.example .env.local
-# Add your WalletConnect project ID (free at https://cloud.walletconnect.com)
 npm run dev
 ```
 
@@ -49,32 +47,30 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### Treasurer (paying the team)
 
-1. Connect MetaMask on the DAO's treasury wallet
-2. Go to **Treasurer Dashboard**
-3. Upload a CSV: `name, wallet_address, amount_usdc`
-4. Select the token (USDC/USDT)
-5. Click **Run Private Payroll**
-   - Funds deposit into Hinkal's shielded pool
-   - Each employee receives a private shielded transfer
-   - On-chain: just one lump-sum deposit to Hinkal : nothing else visible
+1. Connect MetaMask on the DAO's treasury wallet (Polygon, Arbitrum, Base, or other Hinkal-supported chain)
+2. Sign the "Login to Hinkal Protocol" message to derive your shielded keys
+3. Go to **Treasurer Dashboard**
+4. Upload a CSV: `name, wallet_address, amount_usdc`
+5. Select the token
+6. Click **Run Private Payroll**
+   - This calls `hinkal.depositAndWithdraw()`: funds are deposited into the shielded pool and paid out to each recipient's address in one transaction
+   - Recipients receive funds directly in their normal wallet — no claiming step required
 
-### Employee (claiming payment)
+### Claim page (general utility)
 
-1. Connect the wallet your employer registered
-2. Go to **Claim My Payment**
-3. See your shielded balance
-4. Enter a fresh wallet address (for maximum privacy)
-5. Click **Withdraw Privately** : ZK proof generated locally, funds arrive with no on-chain link to the DAO
+A separate page for withdrawing any shielded balance you hold to any address, generating a ZK proof of ownership locally. Useful for recovering funds sent via a shielded transfer, or for testing.
 
-## Privacy Model
+## Privacy Model — what's actually hidden, and from whom
 
-| Observer | Sees |
+| Observer | What they can see |
 |---|---|
-| Public (Etherscan) | DAO sent X total USDC to Hinkal contract |
-| Hinkal contract | Encrypted notes : amounts and addresses hidden |
-| Employee | Their own balance only (via private key) |
-| Treasurer | Full payroll history (local state) |
-| Auditor | Selective disclosure via Hinkal viewing keys |
+| Public (block explorer) | The treasury's deposit transaction and each recipient's payout transaction — as two separate, unlinked-looking transactions. Cannot prove which deposit funded which payout without breaking the ZK proof. |
+| Hinkal's relayer/backend | Likely sees the plaintext recipient addresses and amounts, since it constructs the on-chain withdrawal transactions on the treasurer's behalf. **We trust Hinkal's infrastructure not to leak or correlate this data** — this is a real trust assumption, not a cryptographic guarantee. |
+| A sophisticated chain analyst | Could attempt timing/amount correlation (e.g. "a $X deposit happened, and within minutes, payouts totaling ~$X came out") — this is a known limitation of low-volume pool usage. Privacy strengthens as more unrelated users transact through the same pool, since each transaction blends into a larger anonymity set. |
+
+**Honest summary:** this design hides the on-chain *link* between payer and payee from public observers. It does not hide individual amounts/addresses from on-chain analysis, and it does not hide the payment graph from Hinkal's own infrastructure. A fully shielded alternative (treasurer transfers to the employee's shielded balance; employee withdraws independently, at a time and to an address of their choosing) would provide stronger unlinkability at the cost of requiring employees to share a private "recipient info" code in advance and manually claim funds. We chose direct settlement for reliability and zero setup for employees.
+
+ZK proofs in this app are generated by Hinkal's backend (`generateProofRemotely: true`, the SDK default), not in the browser.
 
 ## Architecture
 
@@ -82,18 +78,18 @@ Open [http://localhost:3000](http://localhost:3000).
 src/
   app/
     page.tsx          : Landing / wallet connect
-    treasurer/        : Payroll dashboard
-    employee/         : Claim / withdraw
+    treasurer/        : Payroll dashboard (CSV upload, run payroll)
+    employee/         : Claim page (withdraw any shielded balance)
   components/
     payroll/          : CSVUpload, PayrollTable, TokenSelector
     ui/               : Button, Badge, Spinner
   hooks/
-    usePayroll.ts     : Deposit + batch transfer logic
-    useWithdraw.ts    : ZK withdrawal flow
+    usePayroll.ts     : hinkal.depositAndWithdraw() — deposit + direct payout in one tx
+    useWithdraw.ts    : hinkal.withdraw() — shielded balance withdrawal to any address
   context/
     HinkalContext.tsx : Hinkal SDK instance + balances
   lib/
-    csv.ts            : CSV parsing
+    csv.ts            : CSV parsing and validation
     wagmi.config.ts   : Wallet config
 ```
 
