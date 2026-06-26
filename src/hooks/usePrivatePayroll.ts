@@ -54,11 +54,10 @@ export function usePrivatePayroll() {
 
           toast.success("Funds deposited into shielded pool", { id: "private-deposit" });
 
-          toast.loading("Waiting for Hinkal to sync the new balance…", {
+          toast.loading("Syncing merkle tree with the new deposit…", {
             id: "private-sync",
           });
-          await refreshBalances();
-          await new Promise((resolve) => setTimeout(resolve, 20_000));
+          await hinkal.resetMerkleTreesIfNecessary([chainId!]);
           await refreshBalances();
           toast.success("Synced — starting transfers", { id: "private-sync" });
         } else {
