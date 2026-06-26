@@ -6,11 +6,19 @@ import { useHinkal } from "@/context/HinkalContext";
 import { useWithdraw } from "@/hooks/useWithdraw";
 import { ConnectWallet } from "@/components/ConnectWallet";
 import { Button } from "@/components/ui/Button";
+import toast from "react-hot-toast";
 
 export default function EmployeePage() {
-  const { dataLoaded, balances, shieldedAddress, refreshBalances } =
+  const { hinkal, dataLoaded, balances, shieldedAddress, refreshBalances } =
     useHinkal();
   const { withdraw, isProcessing } = useWithdraw();
+
+  const recipientInfo = dataLoaded && hinkal ? hinkal.getRecipientInfo() : "";
+
+  const copyRecipientInfo = () => {
+    navigator.clipboard.writeText(recipientInfo);
+    toast.success("Recipient info copied — send this to your treasurer");
+  };
 
   const [recipientAddress, setRecipientAddress] = useState("");
   const [selectedToken, setSelectedToken] = useState<ERC20Token | null>(null);
@@ -49,6 +57,29 @@ export default function EmployeePage() {
         </div>
       ) : (
         <>
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-3">
+            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+              Your Recipient Info
+            </h2>
+            <p className="text-xs text-slate-500">
+              Share this with your treasurer for maximum-privacy payroll —
+              they pay your shielded balance directly, with no public address
+              involved.
+            </p>
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-3">
+              <p className="text-xs text-slate-400 font-mono break-all">
+                {recipientInfo}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              className="text-xs w-full justify-center"
+              onClick={copyRecipientInfo}
+            >
+              Copy Recipient Info
+            </Button>
+          </div>
+
           <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">

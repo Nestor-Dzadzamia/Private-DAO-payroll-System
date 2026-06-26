@@ -3,19 +3,20 @@ import { useState, useMemo } from "react";
 import { ERC20Token, getAmountInWei } from "@hinkal/common";
 import Link from "next/link";
 import { useHinkal } from "@/context/HinkalContext";
-import { usePayroll } from "@/hooks/usePayroll";
-import { PayrollEntry } from "@/types/payroll";
-import { CSVUpload } from "@/components/payroll/CSVUpload";
-import { PayrollTable } from "@/components/payroll/PayrollTable";
+import { usePrivatePayroll } from "@/hooks/usePrivatePayroll";
+import { PrivatePayrollEntry } from "@/types/privatePayroll";
+import { PrivateCSVUpload } from "@/components/payroll/PrivateCSVUpload";
+import { PrivatePayrollTable } from "@/components/payroll/PrivatePayrollTable";
 import { TokenSelector } from "@/components/payroll/TokenSelector";
 import { Button } from "@/components/ui/Button";
 import { ConnectWallet } from "@/components/ConnectWallet";
 
-export default function TreasurerPage() {
+export default function PrivateTreasurerPage() {
   const { dataLoaded, shieldedAddress, selectedNetwork } = useHinkal();
-  const { runPayroll, status, results, currentIndex, reset } = usePayroll();
+  const { runPrivatePayroll, status, results, currentIndex, reset } =
+    usePrivatePayroll();
 
-  const [entries, setEntries] = useState<PayrollEntry[]>([]);
+  const [entries, setEntries] = useState<PrivatePayrollEntry[]>([]);
   const [selectedToken, setSelectedToken] = useState<ERC20Token | null>(null);
 
   const totalAmount = useMemo(() => {
@@ -46,23 +47,18 @@ export default function TreasurerPage() {
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href="/"
+            href="/treasurer"
             className="text-xs text-slate-500 hover:text-slate-300 mb-1 block"
           >
-            ← Back
+            ← Back to standard payroll
           </Link>
           <h1 className="text-2xl font-bold text-white">
-            Treasurer Dashboard
+            Maximum-Privacy Payroll
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Run private payroll for your DAO contributors
+            Pays directly into each employee&apos;s shielded balance — no
+            public address ever appears on-chain for the recipient
           </p>
-          <Link
-            href="/treasurer/private"
-            className="text-xs text-violet-400 hover:text-violet-300 underline mt-1 inline-block"
-          >
-            Need maximum privacy instead? →
-          </Link>
         </div>
         {dataLoaded && (
           <div className="text-right">
@@ -77,6 +73,21 @@ export default function TreasurerPage() {
             )}
           </div>
         )}
+      </div>
+
+      <div className="bg-violet-900/20 border border-violet-800/50 rounded-xl p-4 text-xs text-violet-300 space-y-1">
+        <p className="font-semibold">How this differs from standard payroll</p>
+        <p className="text-violet-300/80">
+          Employees must first connect their wallet on the{" "}
+          <Link href="/employee" className="underline">
+            Claim page
+          </Link>{" "}
+          and copy their <strong>Recipient Info</strong> string to send you
+          out-of-band (Slack, email). Funds land in their shielded balance,
+          decoupled in time from your deposit — they withdraw independently,
+          whenever and to wherever they choose. This breaks the timing link
+          that standard payroll does not.
+        </p>
       </div>
 
       {!dataLoaded ? (
@@ -95,11 +106,12 @@ export default function TreasurerPage() {
             <p className="text-xs text-slate-500">
               CSV format:{" "}
               <code className="text-violet-400">
-                name, 0x_address, amount_usdc
-              </code>
+                name;recipientInfo;amount_usdc
+              </code>{" "}
+              (semicolon-separated — recipient info itself contains commas)
             </p>
             {entries.length === 0 ? (
-              <CSVUpload onEntries={setEntries} />
+              <PrivateCSVUpload onEntries={setEntries} />
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -119,7 +131,7 @@ export default function TreasurerPage() {
                     </Button>
                   )}
                 </div>
-                <PayrollTable
+                <PrivatePayrollTable
                   entries={entries}
                   results={results.length > 0 ? results : undefined}
                   currentIndex={currentIndex}
@@ -143,7 +155,7 @@ export default function TreasurerPage() {
           {entries.length > 0 && selectedToken && (
             <section className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
               <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-                3 — Run Payroll
+                3 — Run Private Payroll
               </h2>
 
               <div className="bg-slate-800/50 rounded-xl p-4 space-y-2">
@@ -162,7 +174,7 @@ export default function TreasurerPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Privacy</span>
                   <span className="text-emerald-400 font-medium">
-                    ZK shielded (Hinkal)
+                    Shielded-to-shielded (Hinkal)
                   </span>
                 </div>
               </div>
@@ -179,7 +191,7 @@ export default function TreasurerPage() {
                   {status === "transferring" && (
                     <p className="flex items-center gap-2">
                       <span className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
-                      Sending private transfers ({currentIndex + 1}/
+                      Sending shielded transfers ({currentIndex + 1}/
                       {entries.length})…
                     </p>
                   )}
@@ -189,11 +201,12 @@ export default function TreasurerPage() {
               {status === "done" && (
                 <div className="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-4 text-center">
                   <p className="text-emerald-400 font-semibold">
-                    Payroll complete!
+                    Private payroll complete!
                   </p>
                   <p className="text-slate-400 text-xs mt-1">
                     {results.filter((r) => r.status === "success").length}{" "}
-                    transfers sent privately via Hinkal
+                    transfers sent to shielded balances. Employees can now
+                    withdraw independently from the Claim page.
                   </p>
                 </div>
               )}
@@ -203,7 +216,8 @@ export default function TreasurerPage() {
                 loading={isRunning}
                 disabled={!canRun}
                 onClick={() => {
-                  if (selectedToken && totalAmount) runPayroll(entries, selectedToken);
+                  if (selectedToken && totalAmount)
+                    runPrivatePayroll(entries, selectedToken, totalAmount);
                 }}
               >
                 {isRunning
