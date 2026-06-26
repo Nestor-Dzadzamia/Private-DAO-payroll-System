@@ -1,12 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
-import {
-  ERC20Token,
-  getAmountInWei,
-  getAmountInToken,
-  getFeeStructure,
-  ExternalActionId,
-} from "@hinkal/common";
+import { ERC20Token, getAmountInWei } from "@hinkal/common";
 import Link from "next/link";
 import { useHinkal } from "@/context/HinkalContext";
 import { usePrivatePayroll } from "@/hooks/usePrivatePayroll";
@@ -17,16 +11,14 @@ import { TokenSelector } from "@/components/payroll/TokenSelector";
 import { Button } from "@/components/ui/Button";
 import { ConnectWallet } from "@/components/ConnectWallet";
 import { DisconnectButton } from "@/components/DisconnectButton";
-import toast from "react-hot-toast";
 
 export default function PrivateTreasurerPage() {
-  const { dataLoaded, chainId, shieldedAddress, selectedNetwork } = useHinkal();
+  const { dataLoaded, shieldedAddress, selectedNetwork } = useHinkal();
   const { runPrivatePayroll, status, results, currentIndex, reset } =
     usePrivatePayroll();
 
   const [entries, setEntries] = useState<PrivatePayrollEntry[]>([]);
   const [selectedToken, setSelectedToken] = useState<ERC20Token | null>(null);
-  const [skipDeposit, setSkipDeposit] = useState(false);
 
   const totalAmount = useMemo(() => {
     if (!selectedToken || entries.length === 0) return null;
@@ -85,6 +77,21 @@ export default function PrivateTreasurerPage() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="bg-red-900/20 border border-red-800/50 rounded-xl p-4 text-xs text-red-300 space-y-1">
+        <p className="font-semibold">⚠ Experimental — does not currently work</p>
+        <p className="text-red-300/80">
+          Every real-fund test of this flow failed with an &quot;insufficient
+          funds&quot; error from Hinkal&apos;s SDK, traced to{" "}
+          <code>outputUtxoProcessing.mjs</code> not recognizing a freshly
+          deposited balance. Left here as a documented record of the
+          investigation — use the{" "}
+          <Link href="/treasurer" className="underline">
+            standard Treasurer Dashboard
+          </Link>{" "}
+          for the working, verified flow.
+        </p>
       </div>
 
       <div className="bg-violet-900/20 border border-violet-800/50 rounded-xl p-4 text-xs text-violet-300 space-y-1">
@@ -161,41 +168,6 @@ export default function PrivateTreasurerPage() {
                 selected={selectedToken}
                 onSelect={setSelectedToken}
               />
-              {selectedToken && (
-                <Button
-                  variant="ghost"
-                  className="text-xs"
-                  onClick={async () => {
-                    try {
-                      const fee = await getFeeStructure(
-                        chainId!,
-                        undefined,
-                        [selectedToken.erc20TokenAddress],
-                        ExternalActionId.Transact,
-                        [],
-                        5n
-                      );
-                      const flatFeeAmount = getAmountInToken(
-                        selectedToken,
-                        fee.flatFee
-                      );
-                      toast.success(
-                        `Flat fee: ${flatFeeAmount} ${selectedToken.symbol} | Variable rate: ${fee.variableRate}`,
-                        { duration: 10000 }
-                      );
-                      console.log("Fee structure:", fee);
-                    } catch (err) {
-                      console.error(err);
-                      toast.error(
-                        "Could not fetch fee structure: " +
-                          (err instanceof Error ? err.message : String(err))
-                      );
-                    }
-                  }}
-                >
-                  Check transfer fee
-                </Button>
-              )}
             </section>
           )}
 
@@ -258,23 +230,13 @@ export default function PrivateTreasurerPage() {
                 </div>
               )}
 
-              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={skipDeposit}
-                  onChange={(e) => setSkipDeposit(e.target.checked)}
-                  className="rounded"
-                />
-                Skip deposit — use existing shielded balance (for testing)
-              </label>
-
               <Button
                 className="w-full justify-center"
                 loading={isRunning}
                 disabled={!canRun}
                 onClick={() => {
                   if (selectedToken && totalAmount)
-                    runPrivatePayroll(entries, selectedToken, totalAmount, skipDeposit);
+                    runPrivatePayroll(entries, selectedToken, totalAmount);
                 }}
               >
                 {isRunning
