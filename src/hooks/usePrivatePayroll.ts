@@ -16,7 +16,12 @@ export function usePrivatePayroll() {
   const [currentIndex, setCurrentIndex] = useState(-1);
 
   const runPrivatePayroll = useCallback(
-    async (entries: PrivatePayrollEntry[], token: ERC20Token, totalAmount: bigint) => {
+    async (
+      entries: PrivatePayrollEntry[],
+      token: ERC20Token,
+      totalAmount: bigint,
+      skipDeposit = false
+    ) => {
       if (!dataLoaded || !hinkal) {
         toast.error("Wallet not connected");
         return;
@@ -27,26 +32,33 @@ export function usePrivatePayroll() {
         status: "pending",
       }));
       setResults(initialResults);
-      setStatus("depositing");
+      setStatus(skipDeposit ? "transferring" : "depositing");
       setCurrentIndex(-1);
 
       try {
-        toast.loading("Depositing funds into Hinkal shielded pool…", {
-          id: "private-deposit",
-        });
+        if (!skipDeposit) {
+          toast.loading("Depositing funds into Hinkal shielded pool…", {
+            id: "private-deposit",
+          });
 
-        const depositTx = await hinkal.deposit([token], [totalAmount]);
-        const depositTxHash =
-          typeof depositTx === "string"
-            ? depositTx
-            : depositTx && typeof depositTx === "object" && "hash" in depositTx
-              ? (depositTx.hash as string)
-              : undefined;
-        if (depositTxHash) {
-          await hinkal.waitForTransaction(chainId!, depositTxHash);
+          const depositTx = await hinkal.deposit([token], [totalAmount]);
+          const depositTxHash =
+            typeof depositTx === "string"
+              ? depositTx
+              : depositTx && typeof depositTx === "object" && "hash" in depositTx
+                ? (depositTx.hash as string)
+                : undefined;
+          if (depositTxHash) {
+            await hinkal.waitForTransaction(chainId!, depositTxHash);
+          }
+
+          toast.success("Funds deposited into shielded pool", { id: "private-deposit" });
+        } else {
+          toast("Using existing shielded balance — skipping deposit", {
+            id: "private-deposit",
+          });
         }
 
-        toast.success("Funds deposited into shielded pool", { id: "private-deposit" });
         setStatus("transferring");
 
         let successCount = 0;

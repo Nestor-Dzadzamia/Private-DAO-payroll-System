@@ -19,6 +19,7 @@ export default function PrivateTreasurerPage() {
 
   const [entries, setEntries] = useState<PrivatePayrollEntry[]>([]);
   const [selectedToken, setSelectedToken] = useState<ERC20Token | null>(null);
+  const [skipDeposit, setSkipDeposit] = useState(false);
 
   const totalAmount = useMemo(() => {
     if (!selectedToken || entries.length === 0) return null;
@@ -215,13 +216,23 @@ export default function PrivateTreasurerPage() {
                 </div>
               )}
 
+              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={skipDeposit}
+                  onChange={(e) => setSkipDeposit(e.target.checked)}
+                  className="rounded"
+                />
+                Skip deposit — use existing shielded balance (for testing)
+              </label>
+
               <Button
                 className="w-full justify-center"
                 loading={isRunning}
                 disabled={!canRun}
                 onClick={() => {
                   if (selectedToken && totalAmount)
-                    runPrivatePayroll(entries, selectedToken, totalAmount);
+                    runPrivatePayroll(entries, selectedToken, totalAmount, skipDeposit);
                 }}
               >
                 {isRunning
