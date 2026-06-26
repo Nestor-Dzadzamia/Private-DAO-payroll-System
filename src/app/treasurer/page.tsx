@@ -127,6 +127,7 @@ export default function TreasurerPage() {
                   entries={entries}
                   results={results.length > 0 ? results : undefined}
                   currentIndex={currentIndex}
+                  tokenSymbol={selectedToken?.symbol}
                 />
               </div>
             )}

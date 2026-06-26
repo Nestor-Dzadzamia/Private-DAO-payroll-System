@@ -5,14 +5,16 @@ type Props = {
   entries: PayrollEntry[];
   results?: TransferResult[];
   currentIndex?: number;
+  tokenSymbol?: string;
 };
 
 function shortAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-export function PayrollTable({ entries, results, currentIndex }: Props) {
+export function PayrollTable({ entries, results, currentIndex, tokenSymbol }: Props) {
   const total = entries.reduce((s, e) => s + parseFloat(e.amount), 0);
+  const symbol = tokenSymbol ?? "USDC";
 
   return (
     <div className="overflow-x-auto">
@@ -22,7 +24,7 @@ export function PayrollTable({ entries, results, currentIndex }: Props) {
             <th className="pb-2 font-medium">#</th>
             <th className="pb-2 font-medium">Name</th>
             <th className="pb-2 font-medium">Address</th>
-            <th className="pb-2 font-medium text-right">Amount (USDC)</th>
+            <th className="pb-2 font-medium text-right">Amount ({symbol})</th>
             {results && (
               <th className="pb-2 font-medium text-right">Status</th>
             )}
@@ -71,7 +73,7 @@ export function PayrollTable({ entries, results, currentIndex }: Props) {
               Total
             </td>
             <td className="pt-3 text-right font-bold text-slate-200">
-              {total.toLocaleString()} USDC
+              {total.toLocaleString()} {symbol}
             </td>
             {results && <td />}
           </tr>
