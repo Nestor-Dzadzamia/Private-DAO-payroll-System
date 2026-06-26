@@ -1,6 +1,12 @@
 "use client";
 import { useState, useMemo } from "react";
-import { ERC20Token, getAmountInWei } from "@hinkal/common";
+import {
+  ERC20Token,
+  getAmountInWei,
+  getAmountInToken,
+  getFeeStructure,
+  ExternalActionId,
+} from "@hinkal/common";
 import Link from "next/link";
 import { useHinkal } from "@/context/HinkalContext";
 import { usePrivatePayroll } from "@/hooks/usePrivatePayroll";
@@ -11,9 +17,10 @@ import { TokenSelector } from "@/components/payroll/TokenSelector";
 import { Button } from "@/components/ui/Button";
 import { ConnectWallet } from "@/components/ConnectWallet";
 import { DisconnectButton } from "@/components/DisconnectButton";
+import toast from "react-hot-toast";
 
 export default function PrivateTreasurerPage() {
-  const { dataLoaded, shieldedAddress, selectedNetwork } = useHinkal();
+  const { dataLoaded, chainId, shieldedAddress, selectedNetwork } = useHinkal();
   const { runPrivatePayroll, status, results, currentIndex, reset } =
     usePrivatePayroll();
 
@@ -154,6 +161,41 @@ export default function PrivateTreasurerPage() {
                 selected={selectedToken}
                 onSelect={setSelectedToken}
               />
+              {selectedToken && (
+                <Button
+                  variant="ghost"
+                  className="text-xs"
+                  onClick={async () => {
+                    try {
+                      const fee = await getFeeStructure(
+                        chainId!,
+                        undefined,
+                        [selectedToken.erc20TokenAddress],
+                        ExternalActionId.Transact,
+                        [],
+                        5n
+                      );
+                      const flatFeeAmount = getAmountInToken(
+                        selectedToken,
+                        fee.flatFee
+                      );
+                      toast.success(
+                        `Flat fee: ${flatFeeAmount} ${selectedToken.symbol} | Variable rate: ${fee.variableRate}`,
+                        { duration: 10000 }
+                      );
+                      console.log("Fee structure:", fee);
+                    } catch (err) {
+                      console.error(err);
+                      toast.error(
+                        "Could not fetch fee structure: " +
+                          (err instanceof Error ? err.message : String(err))
+                      );
+                    }
+                  }}
+                >
+                  Check transfer fee
+                </Button>
+              )}
             </section>
           )}
 
