@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useHinkal } from "@/context/HinkalContext";
 import { useWithdraw } from "@/hooks/useWithdraw";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { DisconnectButton } from "@/components/DisconnectButton";
 import { Button } from "@/components/ui/Button";
 import toast from "react-hot-toast";
 
@@ -42,7 +43,10 @@ export default function EmployeePage() {
         >
           ← Back
         </Link>
-        <h1 className="text-2xl font-bold text-white">Claim My Payment</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">Claim My Payment</h1>
+          {dataLoaded && <DisconnectButton />}
+        </div>
         <p className="text-slate-400 text-sm mt-1">
           Withdraw your private balance to any address
         </p>

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { DisconnectButton } from "@/components/DisconnectButton";
 import { useHinkal } from "@/context/HinkalContext";
 import { Button } from "@/components/ui/Button";
 
@@ -71,9 +72,12 @@ export default function Home() {
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
           {dataLoaded ? (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 justify-center text-emerald-400 text-sm">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full" />
-                Wallet connected
+              <div className="flex items-center justify-center gap-3 text-sm">
+                <span className="flex items-center gap-2 text-emerald-400">
+                  <span className="w-2 h-2 bg-emerald-400 rounded-full" />
+                  Wallet connected
+                </span>
+                <DisconnectButton />
               </div>
               {shieldedAddress && (
                 <p className="text-xs text-slate-500 font-mono break-all">

@@ -10,6 +10,7 @@ import { PayrollTable } from "@/components/payroll/PayrollTable";
 import { TokenSelector } from "@/components/payroll/TokenSelector";
 import { Button } from "@/components/ui/Button";
 import { ConnectWallet } from "@/components/ConnectWallet";
+import { DisconnectButton } from "@/components/DisconnectButton";
 
 export default function TreasurerPage() {
   const { dataLoaded, shieldedAddress, selectedNetwork } = useHinkal();
@@ -75,6 +76,9 @@ export default function TreasurerPage() {
                 {shieldedAddress.slice(0, 12)}…
               </span>
             )}
+            <div className="mt-1">
+              <DisconnectButton />
+            </div>
           </div>
         )}
       </div>

@@ -34,6 +34,7 @@ type HinkalContextType = {
   erc20List: ERC20Token[];
   balances: TokenBalance[];
   refreshBalances: () => Promise<void>;
+  disconnectHinkal: () => void;
 };
 
 const hinkalInstance = typeof window !== "undefined" ? new Hinkal<Connector>() : (null as unknown as Hinkal<Connector>);
@@ -51,6 +52,7 @@ const HinkalContext = createContext<HinkalContextType>({
   erc20List: [],
   balances: [],
   refreshBalances: async () => {},
+  disconnectHinkal: () => {},
 });
 
 export const HinkalProvider: FC<{ children: ReactNode }> = ({ children }) => {
@@ -96,6 +98,14 @@ export const HinkalProvider: FC<{ children: ReactNode }> = ({ children }) => {
     return () => clearInterval(interval);
   }, [dataLoaded, refreshBalances]);
 
+  const disconnectHinkal = useCallback(() => {
+    setHinkal(new Hinkal<Connector>());
+    setChainId(undefined as unknown as number);
+    setDataLoaded(false);
+    setShieldedAddress(undefined);
+    setBalances([]);
+  }, []);
+
   return (
     <HinkalContext.Provider
       value={{
@@ -111,6 +121,7 @@ export const HinkalProvider: FC<{ children: ReactNode }> = ({ children }) => {
         erc20List,
         balances,
         refreshBalances,
+        disconnectHinkal,
       }}
     >
       {children}
