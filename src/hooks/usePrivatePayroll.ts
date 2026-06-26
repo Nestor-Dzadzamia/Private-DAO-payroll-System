@@ -49,6 +49,8 @@ export function usePrivatePayroll() {
         toast.success("Funds deposited into shielded pool", { id: "private-deposit" });
         setStatus("transferring");
 
+        let successCount = 0;
+
         for (let i = 0; i < entries.length; i++) {
           setCurrentIndex(i);
           setResults((prev) =>
@@ -65,6 +67,7 @@ export function usePrivatePayroll() {
               entry.recipientInfo
             );
 
+            successCount++;
             setResults((prev) =>
               prev.map((r, idx) =>
                 idx === i ? { ...r, status: "success", txHash } : r
@@ -82,10 +85,19 @@ export function usePrivatePayroll() {
           }
         }
 
-        setStatus("done");
         setCurrentIndex(-1);
         await refreshBalances();
-        toast.success("Private payroll complete! Recipients can claim from their shielded balance.");
+
+        if (successCount === entries.length) {
+          setStatus("done");
+          toast.success("Private payroll complete! Recipients can claim from their shielded balance.");
+        } else if (successCount > 0) {
+          setStatus("error");
+          toast.error(`Only ${successCount}/${entries.length} transfers succeeded. Deposited funds for the rest remain in your own shielded balance — check the Claim page.`);
+        } else {
+          setStatus("error");
+          toast.error("No transfers succeeded. Your deposited funds remain in your own shielded balance — check the Claim page to recover them.");
+        }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Payroll failed";
         setStatus("error");
