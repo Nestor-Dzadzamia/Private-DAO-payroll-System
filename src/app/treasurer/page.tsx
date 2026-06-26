@@ -58,12 +58,6 @@ export default function TreasurerPage() {
           <p className="text-slate-400 text-sm mt-1">
             Run private payroll for your DAO contributors
           </p>
-          <Link
-            href="/treasurer/private"
-            className="text-xs text-violet-400 hover:text-violet-300 underline mt-1 inline-block"
-          >
-            Need maximum privacy instead? →
-          </Link>
         </div>
         {dataLoaded && (
           <div className="text-right">
